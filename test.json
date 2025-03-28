@@ -1,0 +1,65 @@
+{
+  "shipments": [
+    {
+      "name": "name-of-the-consignee",
+      "add": "M25,NelsonMarg",
+      "phone": "1234567890",
+      "payment_mode": "Prepaid",
+      "pin": 325007,
+      "order": "orderid",
+      "shipping_mode": "Surface",
+      "city": "Kota",
+      "weight": "weight(gms)",
+      "fragile_shipment": "true",
+      "shipment_height": 10,
+      "shipment_width": 11,
+      "shipment_length": 12,
+      "cod_amount": 2125,
+      "state": "Rajasthan",
+      "country": "India",
+      "plastic_packaging": "true"
+    }
+  ],
+  "pickup_location": {
+    "name": "client-warehouse-name-as-registered-with-delhivery",
+    "city": "city",
+    "pin": "pin-code",
+    "country": "country",
+    "phone": "phoneno.",
+    "add": "address-of-warehouse"
+  }
+}
+
+
+Pickup pickup_location - warehouse_id
+shippment[
+  {
+    "order": "35968298625986",
+    "name": "Bhushan K",
+    "add": "500, shri nivas",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "country": "India",
+    "pin": 412207,
+    "phone": "9975359779",
+    "payment_mode": "COD",
+    "shipping_mode": "Surface",
+    "weight": "500",
+    "fragile_shipment": "false",
+    "cod_amount": 100,
+    "plastic_packaging": "true",
+    "item": [
+      {
+            productId
+            quantity
+      },
+      {
+            product id
+            qualitity
+      }
+    ],
+    "shipment_height": 10,
+    "shipment_width": 11,
+    "shipment_length": 12,
+  }
+]
