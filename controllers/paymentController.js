@@ -1,7 +1,7 @@
-const express = require('express');
 const Razorpay = require('razorpay');
 const { query } = require('../pgadmin');
 const crypto = require('crypto');
+const authentication = require("./../middleware/authentication");
 
 // Create Razorpay controller
 const createPaymentLink = async (req, res) => {
@@ -16,10 +16,12 @@ const createPaymentLink = async (req, res) => {
         message: 'Please provide a valid amount'
       });
     }
-    
-    // Static user ID (as requested)
-    const userId = 5;
-    
+    const authToken = req.headers.authorization?.split(" ")[1];
+    const userId = authentication.decodeToken(authToken);
+        if (!userId) {
+            return res.status(401).json({ message: "Invalid authorization token" });
+        }
+        
     // Get the wallet_id for this user
     const walletResult = await query(
       'SELECT id FROM wallets WHERE user_id = $1',
@@ -43,11 +45,11 @@ const createPaymentLink = async (req, res) => {
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET
     });
-    
+    const nowUtc = new Date();
     // First create a pending entry in the wallet_recharge table
     await query(
-      'INSERT INTO wallet_recharge (wallet_id, transaction_type, amount, description, transaction_id, status) VALUES ($1, $2, $3, $4, $5, $6)',
-      [walletId, 'credit', amount, 'Wallet recharge via Razorpay', transactionId, 'pending']
+      'INSERT INTO wallet_recharge (wallet_id, transaction_type, amount, description, transaction_id, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [walletId, 'credit', amount, 'Wallet recharge via Razorpay', transactionId, 'pending', nowUtc]
     );
     
     // Create payment link options
@@ -101,28 +103,33 @@ const createPaymentLink = async (req, res) => {
 
 const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_payment_id, razorpay_payment_link_id, razorpay_payment_link_reference_id, razorpay_payment_link_status, razorpay_signature, transaction_id } = req.query;
+    const { 
+      razorpay_payment_id, 
+      razorpay_payment_link_id, 
+      razorpay_payment_link_reference_id, 
+      razorpay_payment_link_status, 
+      razorpay_signature, 
+      transaction_id 
+    } = req.query;
     
-    // Verify payment status from Razorpay
+    // If status is explicitly "paid", mark it as completed
     if (razorpay_payment_link_status === 'paid') {
-      // Update the wallet_recharge status to completed
       await query(
         'UPDATE wallet_recharge SET status = $1 WHERE transaction_id = $2',
         ['completed', transaction_id]
       );
-      
-      // Redirect to success page
+
       return res.redirect(`${process.env.FRONTEND_URL}/payment/success?transaction_id=${transaction_id}`);
-    } else {
-      // Update the wallet_recharge status to failed
-      await query(
-        'UPDATE wallet_recharge SET status = $1 WHERE transaction_id = $2',
-        ['failed', transaction_id]
-      );
-      
-      // Redirect to failure page
-      return res.redirect(`${process.env.FRONTEND_URL}/payment/failure?transaction_id=${transaction_id}`);
     }
+
+    // If status is missing or any other value, treat it as a failure
+    await query(
+      'UPDATE wallet_recharge SET status = $1 WHERE transaction_id = $2',
+      ['failed', transaction_id]
+    );
+
+    return res.redirect(`${process.env.FRONTEND_URL}/payment/failure?transaction_id=${transaction_id}`);
+    
   } catch (error) {
     console.error('Error verifying payment:', error);
     return res.status(500).json({
@@ -132,6 +139,7 @@ const verifyPayment = async (req, res) => {
     });
   }
 };
+
 
 // Export the controller
 module.exports = {

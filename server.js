@@ -36,6 +36,9 @@ pgAdmin.initializePostgres()
         }
     });
 
+//Transection clenaup job
+require('./middleware/trnsectionCleanupJob');
+
 // Start the server
 const port = process.env.PORT;
 const server = app.listen(port, () => {
