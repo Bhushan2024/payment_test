@@ -71,7 +71,7 @@ const createPaymentLink = async (req, res) => {
         transaction_id: transactionId,
         user_id: userId
       },
-      callback_url: `${process.env.CALLBACK_URL}/recharge/callback'}?transaction_id=${transactionId}`,
+      callback_url: `${process.env.BACKEND_BASEURL}/api/v1/recharge/callback'}?transaction_id=${transactionId}`,
       callback_method: 'get'
     };
     
