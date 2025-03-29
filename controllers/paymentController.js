@@ -71,7 +71,7 @@ const createPaymentLink = async (req, res) => {
         transaction_id: transactionId,
         user_id: userId
       },
-      callback_url: `https://payment-test-3vsv.onrender.com/api/v1/recharge/callback'}?transaction_id=${transactionId}`,
+      callback_url: `https://payment-test-3vsv.onrender.com/api/v1/recharge/callback?transaction_id=${transactionId}`,
       callback_method: 'get'
     };
     
@@ -110,23 +110,6 @@ const verifyPayment = async (req, res) => {
         'UPDATE wallet_recharge SET status = $1 WHERE transaction_id = $2',
         ['completed', transaction_id]
       );
-      
-      // Additional business logic here (like updating user's wallet balance)
-      // Get the amount from the wallet_recharge entry
-      const rechargeResult = await query(
-        'SELECT wallet_id, amount FROM wallet_recharge WHERE transaction_id = $1',
-        [transaction_id]
-      );
-      
-      if (rechargeResult.rows.length > 0) {
-        const { wallet_id, amount } = rechargeResult.rows[0];
-        
-        // Update the wallet balance
-        await query(
-          'UPDATE wallets SET balance = balance + $1 WHERE id = $2',
-          [amount, wallet_id]
-        );
-      }
       
       // Redirect to success page
       return res.redirect(`${process.env.FRONTEND_URL}/payment/success?transaction_id=${transaction_id}`);
